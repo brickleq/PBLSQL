@@ -159,6 +159,7 @@ from sqlalchemy import create_engine, func
 
 #%%
 engine = create_engine("sqlite:///Resources/hawaii.sqlite")
+conn = engine.connect()
 # reflect an existing database into a new model
 Base = automap_base()
 # reflect the tables
@@ -238,7 +239,7 @@ df
 data_end_date = max(dates)
 data_start_date = data_end_date - timedelta(days=365)
 print(data_start_date,data_end_date)
-
+# output: 2016-08-23 00:00:00 2017-08-23 00:00:00
 #%%
 # Perform a query to retrieve the data and precipitation scores
 precip = engine.execute('SELECT date,prcp FROM Measurement WHERE date >= ?',data_start_date)
@@ -247,7 +248,7 @@ prcps = []
 
 for record in precip: 
     print(record)
-    date = record[0]
+    date = dt.datetime.strptime(record[0],'%Y-%m-%d')
     dates.append(date)
     prcp = record[1]
     prcps.append(prcp)
@@ -259,8 +260,19 @@ df.set_index('date',inplace=True)
 df.sort_values(by='date',inplace=True)
 df.dropna(inplace=True) # does 'None' mean no precipitation, or no record of precipitation? hashtag ain't nobody got time for that
 df
+#%%
 # Use Pandas Plotting with Matplotlib to plot the data
-
+plt.xlabel='Date'
+plt.ylabel='Precipitation (mm)'
+plt.plot(df.index,df['prcp'])
+plt.show()
+#%%
+# x = df.index.values.tolist()
+# y = df['prcp'].tolist()
+# histogram = plt.hist(x,y)
+#%%
+y = df[1]
+histogram = plt.hist(x,y)
 #%% [markdown]
 # ![precipitation](Images/precipitation.png)
 
@@ -272,8 +284,14 @@ df
 
 #%%
 # Design a query to show how many stations are available in this dataset?
+n = 0
 station_count = engine.execute('SELECT COUNT(DISTINCT station) FROM Station')
-print(int(station_count))
+print((station_count))
+for record in station_count: print(record)
+#%%
+station_count = func.count(Station.station).label('count')
+print(station_count)
+
 #%%
 # What are the most active stations? (i.e. what stations have the most rows)?
 # List the stations and the counts in descending order.
