@@ -1,0 +1,68 @@
+From 8856c28d728b861a72becedcde44ab8d7b3fadb3 Mon Sep 17 00:00:00 2001
+From: Peter Brickey LeQuire <pbl@uchicago.edu>
+Date: Mon, 29 Apr 2019 16:17:58 -0500
+Subject: [PATCH] from the bus
+
+---
+ 10-Advanced-Data-Storage-and-Retrieval/climate_starter.py | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/10-Advanced-Data-Storage-and-Retrieval/climate_starter.py b/10-Advanced-Data-Storage-and-Retrieval/climate_starter.py
+index c4e999d..0879348 100644
+--- a/10-Advanced-Data-Storage-and-Retrieval/climate_starter.py
++++ b/10-Advanced-Data-Storage-and-Retrieval/climate_starter.py
+@@ -159,7 +159,7 @@ from sqlalchemy import create_engine, func, distinct
+ 
+ #%%
+ engine = create_engine("sqlite:///Resources/hawaii.sqlite")
+-conn = engine.connect()
++conn = engine.connect() #do i need this?
+ # reflect an existing database into a new model
+ Base = automap_base()
+ # reflect the tables
+@@ -264,6 +264,7 @@ df
+ # Use Pandas Plotting with Matplotlib to plot the data
+ plt.plot(df.index,df['prcp'])
+ plt.xticks=365
++plt.yticks=7
+ plt.xlabel='Date'
+ plt.ylabel='Precipitation (mm)'
+ plt.title('Precipitation (mm) - Past Year')
+@@ -281,14 +282,15 @@ df.describe()
+ 
+ #%%
+ # Design a query to show how many stations are available in this dataset?
+-session.query(Measurement.station).distinct().count()
+-session.query(Station.station).distinct().count()
++session.query(Measurement.station).distinct().count() #output: 9
++#session.query(Station.station).distinct().count() #output: 9
+ #%%
+ 
+ 
+ 
+ #%%
+ # What are the most active stations? (i.e. what stations have the most rows)?
++most_active_station = session.query(func.max(Measurement.station).count())
+ # List the stations and the counts in descending order.
+ 
+ 
+@@ -299,6 +301,7 @@ session.query(Station.station).distinct().count()
+ 
+ #%%
+ # Choose the station with the highest number of temperature observations.
++session.query(func.max(Measurement.tobs).count()).filter(Measurement.station=most_active_station).all()
+ # Query the last 12 months of temperature observation data for this station and plot the results as a histogram
+ 
+ #%% [markdown]
+@@ -334,7 +337,7 @@ print(calc_temps('2012-02-28', '2012-03-05'))
+ # Use "Trip Avg Temp" as your Title
+ # Use the average temperature for the y value
+ # Use the peak-to-peak (tmax-tmin) value as the y error bar (yerr)
+-
++plt.title='Trip Avg Temp'
+ 
+ #%%
+ # Calculate the total amount of rainfall per weather station for your trip dates using the previous year's matching dates.
+--
+Working Copy 3.7.5
+
