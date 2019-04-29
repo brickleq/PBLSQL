@@ -188,21 +188,22 @@ for record in m_data:
     station = record[1]
     date = dt.datetime.strptime(record[2],'%Y-%m-%d')
     dates.append(date)
-    stations.append(station)
+    stations.append(str(station))
     prcp = record[3]
     prcps.append(prcp)
     tobs = record[4]
     tobses.append(tobs)
 dict = {'station':stations,'date':dates,'prcp':prcps,'tobs':tobses}
 print(dict)
-m_data = pd.DataFrame(dict)
-m_data.dropna(inplace=True)
+m_df = pd.DataFrame(dict)
+m_df.dropna(inplace=True) # does 'None' mean no precipitation, or no record of precipitation?
 #%%
 
-m_data
+m_df
 
 #%%
 # station,name,latitude,longitude,elevation
+s_data = engine.execute('SELECT * FROM Station')
 
 stations = []
 names = []
@@ -210,33 +211,54 @@ latitudes = []
 longitudes = []
 elevations = []
 
-s_data = engine.execute('SELECT * FROM Station')
-
+for record in s_data:
+    station = str(record[1])
+    name = str(record[2])
     latitude = float(record[3])
     longitude = float(record[4])
     elevation = float(record[5])
+    stations.append(station)
+    names.append(name)
+    latitudes.append(latitude)
+    longitudes.append(longitude)
+    elevations.append(elevation)
+dict = {'station':stations,'name':names,'latitude':latitudes,'longitude':longitudes,'elevation':elevations}
+print(dict)
+s_df = pd.DataFrame(dict)
+s_df
 #%%
-data = pd.DataFrame
-s_data = pd.DataFrame
-m_data = pd.DataFrame
+df = pd.DataFrame
+df = m_df.merge(s_df, on='station')
+df
 
 
 
 #%%
 # # Calculate the date 1 year ago from the last data point in the database
-end_date = max(dates)
-start_date = end_date - timedelta(days=365)
-print(start_date,end_date)
+data_end_date = max(dates)
+data_start_date = data_end_date - timedelta(days=365)
+print(data_start_date,data_end_date)
 
 #%%
-year = timedelta(days=365)
-start_date = end_date - year
 # Perform a query to retrieve the data and precipitation scores
+precip = engine.execute('SELECT date,prcp FROM Measurement WHERE date >= ?',data_start_date)
+dates = []
+prcps = []
 
+for record in precip: 
+    print(record)
+    date = record[0]
+    dates.append(date)
+    prcp = record[1]
+    prcps.append(prcp)
+dict = {'date':dates,'prcp':prcps}
 # Save the query results as a Pandas DataFrame and set the index to the date column
-
+df = pd.DataFrame(dict)
+df.set_index('date',inplace=True)
 # Sort the dataframe by date
-
+df.sort_values(by='date',inplace=True)
+df.dropna(inplace=True) # does 'None' mean no precipitation, or no record of precipitation? hashtag ain't nobody got time for that
+df
 # Use Pandas Plotting with Matplotlib to plot the data
 
 #%% [markdown]
@@ -250,8 +272,8 @@ start_date = end_date - year
 
 #%%
 # Design a query to show how many stations are available in this dataset?
-
-
+station_count = engine.execute('SELECT COUNT(DISTINCT station) FROM Station')
+print(int(station_count))
 #%%
 # What are the most active stations? (i.e. what stations have the most rows)?
 # List the stations and the counts in descending order.
