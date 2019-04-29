@@ -154,7 +154,7 @@ from datetime import timedelta
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, func
+from sqlalchemy import create_engine, func, distinct
 
 
 #%%
@@ -262,35 +262,30 @@ df.dropna(inplace=True) # does 'None' mean no precipitation, or no record of pre
 df
 #%%
 # Use Pandas Plotting with Matplotlib to plot the data
+plt.plot(df.index,df['prcp'])
+plt.xticks=365
 plt.xlabel='Date'
 plt.ylabel='Precipitation (mm)'
-plt.plot(df.index,df['prcp'])
+plt.title('Precipitation (mm) - Past Year')
 plt.show()
 #%%
-# x = df.index.values.tolist()
-# y = df['prcp'].tolist()
-# histogram = plt.hist(x,y)
-#%%
-y = df[1]
-histogram = plt.hist(x,y)
+
 #%% [markdown]
 # ![precipitation](Images/precipitation.png)
 
 #%%
 # Use Pandas to calcualte the summary statistics for the precipitation data
-
+df.describe()
 #%% [markdown]
 # ![describe](Images/describe.png)
 
 #%%
 # Design a query to show how many stations are available in this dataset?
-n = 0
-station_count = engine.execute('SELECT COUNT(DISTINCT station) FROM Station')
-print((station_count))
-for record in station_count: print(record)
+session.query(Measurement.station).distinct().count()
+session.query(Station.station).distinct().count()
 #%%
-station_count = func.count(Station.station).label('count')
-print(station_count)
+
+
 
 #%%
 # What are the most active stations? (i.e. what stations have the most rows)?
