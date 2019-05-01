@@ -146,7 +146,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import datetime as dt
-from datetime import timedelta
+from datetime import date, timedelta
+from flask import Flask, jsonify
 
 # Reflect Tables into SQLAlchemy ORM
 
@@ -154,10 +155,11 @@ from datetime import timedelta
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, func, distinct
+from sqlalchemy import create_engine, func, distinct, text
 
 
 #%%
+
 engine = create_engine("sqlite:///Resources/hawaii.sqlite")
 conn = engine.connect() #do i need this?
 # reflect an existing database into a new model
@@ -239,6 +241,8 @@ df
 data_end_date = max(dates)
 data_start_date = data_end_date - timedelta(days=365)
 print(data_start_date,data_end_date)
+
+vacay_start_date = 
 # output: 2016-08-23 00:00:00 2017-08-23 00:00:00
 #%%
 # Perform a query to retrieve the data and precipitation scores
@@ -266,8 +270,8 @@ plt.plot(df.index,df['prcp'])
 plt.xticks=365
 plt.yticks=7
 plt.xlabel='Date'
-plt.ylabel='Precipitation (mm)'
-plt.title('Precipitation (mm) - Past Year')
+plt.ylabel='Precipitation'
+plt.title('Precipitation - Past Year')
 plt.show()
 #%%
 
@@ -283,33 +287,61 @@ df.describe()
 #%%
 # Design a query to show how many stations are available in this dataset?
 session.query(Measurement.station).distinct().count() #output: 9
-#session.query(Station.station).distinct().count() #output: 9
-#%%
-
-
+#session.query(Station.station).distinct().count() #output: 9. Samesies!
 
 #%%
 # What are the most active stations? (i.e. what stations have the most rows)?
-most_active_station = session.query(func.max(Measurement.station).count())
 # List the stations and the counts in descending order.
-
+most_active_stations = session.query(Measurement.station, func.count(Measurement.id)).group_by(Measurement.station).order_by(func.count(Measurement.id).desc()).all()
+print(most_active_stations)
 
 #%%
-# Using the station id from the previous query, calculate the lowest temperature recorded, 
-# highest temperature recorded, and average temperature most active station?
+# Using the station id from the previous query, 
+most_active_station = session.query(Measurement.station, func.count(Measurement.id)).group_by(Measurement.station).order_by(func.count(Measurement.id).desc()).first()
+most_active_station
+most_active_station = most_active_station[0]
+most_active_station
 
+#%%
+# calculate the lowest temperature recorded, 
+# highest temperature recorded, and average temperature most active station?
+'''
+lowest_temp = session.query(func.min(Measurement.tobs)).filter(Measurement.station == 'USC00519281').all()
+display(lowest_temp)
+'''
+#%%
+min_temp = session.query(func.min(Measurement.tobs)).filter(Measurement.station==most_active_station).all()
+display(min_temp)
+max_temp = session.query(func.max(Measurement.tobs)).filter(Measurement.station==most_active_station).all()
+display(max_temp)
+avg_temp = session.query(func.avg(Measurement.tobs)).filter(Measurement.station==most_active_station).all()
+display(avg_temp)
 
 #%%
 # Choose the station with the highest number of temperature observations.
-session.query(func.max(Measurement.tobs).count()).filter(Measurement.station=most_active_station).all()
+station_with_most_tobs = session.query(Measurement.station, func.count(Measurement.tobs)).group_by(Measurement.station).order_by(func.count(Measurement.tobs).desc()).first()
+display(station_with_most_tobs)
+station_with_most_tobs = station_with_most_tobs[0]
+display(station_with_most_tobs)
 # Query the last 12 months of temperature observation data for this station and plot the results as a histogram
+last_years_tobs = session.query(Measurement.tobs).filter(Measurement.date >= data_start_date).all()
+display(last_years_tobs)
 
+#%%
+plt.hist(last_years_tobs,bins=12)
+plt.title('Temperature Observations Over 12 Months - Most Active Station')
+plt.ylabel('Frequency')
+plt.xlabel('Temperature (°F)')
+plt.legend('Temperature Observations', location='best')
+plt.show()
 #%% [markdown]
 # ![precipitation](Images/station-histogram.png)
 
 #%%
 # This function called `calc_temps` will accept start date and end date in the format '%Y-%m-%d' 
 # and return the minimum, average, and maximum temperatures for that range of dates
+start_date = data_start_date
+end_date = data_end_date
 def calc_temps(start_date, end_date):
     """TMIN, TAVG, and TMAX for a list of dates.
     
