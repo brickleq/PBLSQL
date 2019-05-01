@@ -139,7 +139,7 @@ Data Boot Camp ©2019. All Rights Reserved.
 '''
 
 #%%
-get_ipython().run_line_magic('matplotlib', 'inline')
+#get_ipython().run_line_magic('matplotlib', 'inline')
 from matplotlib import style
 style.use('fivethirtyeight')
 import matplotlib.pyplot as plt
